@@ -1,4 +1,5 @@
 import sqlite3
+import subprocess
 from datetime import datetime
 
 import botometer
@@ -9,6 +10,7 @@ import twitter
 if __name__ == '__main__':
     while True:
         try:
+            iteration = 0
             # user being studied
             TARGET_USER = "jairbolsonaro"
 
@@ -35,9 +37,6 @@ if __name__ == '__main__':
             }
 
             next_cursor = -1
-            # csvFile = open('data/scores.csv', 'w', newline='')
-            # csvWriter = csv.writer(csvFile, delimiter=",")
-            # csvWriter.writerow(["userId", "userName", "capEnglish", "capUniversal"])
             while True:
                 print("Starting Twitter API")
                 api = twitter.Api(consumer_key=CONSUMER_KEY,
@@ -49,9 +48,14 @@ if __name__ == '__main__':
                                           mashape_key=mashape_key,
                                           **twitter_app_auth)
 
+                # create plots and update git server
+                if iteration == 10:
+                    subprocess.call(["bash", "update.sh"])
+                    iteration = 0
+                iteration = iteration + 1
+
                 limit = api.CheckRateLimit("https://api.twitter.com/1.1/followers/list.json")
                 print("Next rate reset (Twitter):" + datetime.utcfromtimestamp(limit[2]).strftime('%Y-%m-%d %H:%M:%S'))
-                # csvFile.flush()
                 conn.commit()
                 try:
                     next_cursor, previous_cursor, followers = api.GetFollowersPaged(screen_name=TARGET_USER,
@@ -77,22 +81,16 @@ if __name__ == '__main__':
                             continue
                         result = bom.check_account(follower.AsDict()["id"])
                         # store user data
-                        # csvWriter.writerow([result["user"]["id_str"]] + [result["user"]["screen_name"]] +
-                        #                  [result["cap"]["english"].__str__()] + [result["cap"]["universal"].__str__()])
                         c.execute('INSERT INTO {} VALUES (?,?,?,?)'.format(TARGET_USER),
                                   [result["user"]["id_str"], result["user"]["screen_name"], result["cap"]["english"],
                                    result["cap"]["universal"]])
                     except botometer.NoTimelineError as error:
                         # some accounts have no timeline, so botometer cannot score them
-                        # csvWriter.writerow([follower.AsDict()["id_str"]] + [follower.AsDict()["screen_name"]] +
-                        #                  ["NoTimeline"] + ["NoTimeline"])
                         c.execute('INSERT INTO {} VALUES (?,?,?,?)'.format(TARGET_USER),
                                   [follower.AsDict()["id"], follower.AsDict()["screen_name"],
                                    -1, -1])
                     except tweepy.TweepError:
                         # some accounts have protected tweets, so botometer cannot score them
-                        # csvWriter.writerow([follower.AsDict()["id_str"]] + [follower.AsDict()["screen_name"]] +
-                        #                  ["NoTimeline"] + ["NoTimeline"])
                         c.execute('INSERT INTO {} VALUES (?,?,?,?)'.format(TARGET_USER),
                                   [follower.AsDict()["id"], follower.AsDict()["screen_name"],
                                    -2, -2])
