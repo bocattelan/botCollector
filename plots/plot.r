@@ -17,7 +17,7 @@ pdf('../plots/plot.pdf')
 #  ggtitle("Twitter: jairbolsonaro") +
 #  xlab("Prob. of being a bot | Prob. de ser um robô") + ylab("Number of accounts | Número de contas")
 histogram(df$capUniversal * 100, type = "percent",
-    main = "Twitter: jairbolsonaro", xlab = "Prob. of being a bot | Prob. de ser um robô",
+    main = paste("Twitter: jairbolsonaro, pop: ", nrow(df)), xlab = "Prob. of being a bot | Prob. de ser um robô",
     ylab = "Relative number of accounts | Número relativo de contas",
     breaks=seq(from=0,to=100,by=5))
 
