@@ -16,9 +16,9 @@ echo "Esse programa analisa as contas que seguem uma conta alvo."
 echo "Cada conta que segue a conta alvo é analisada usando a API do projeto botometer."
 echo "Apesar de poderosa, essa ferramenta tem seus limites."
 echo "Contas sem timeline ou com sua timeline privada não são analisados."
-echo "Contudo, por esse tipo de conta ser suspeita, nós mostramos abaixo a porcentagem delas."
+echo "Contudo, por esse tipo de conta ser suspeita, nós mostramos abaixo a porcentagem delas em relação ao total de contas analisadas."
 echo "O BotCollector é capaz de estudar qualquer conta do Twitter."
-echo "Como exemplo, escolhemos nosso presidente Jair Bolsonaro.  "
+echo "Como exemplo, escolhemos nosso presidente: Jair Bolsonaro.  "
 
 echo "## Resultados  "
 
@@ -38,12 +38,12 @@ echo "## Estatísticas:  "
 
 echo "- Porcentagem de contas com probabilidade acima de **${cutValue}%** de serem bots: **${percentageBots}%**  "
 
-echo "  - Obs: essa porcentagem foi feita com base em uma população de **${populationPlot}** ( a mesma usada no gráfico )  "
+echo "  - Obs: essa porcentagem foi feita com base em uma população de **${populationPlot}** contas ( a mesma usada no gráfico )  "
 
 echo "- Porcentagem de contas sem timeline: **${percentageNoTimeline}%**  "
 
-echo "  - Obs: essa porcentagem foi feita com base na população total verificada: **${populationAll}** ( Botometer não consegue estudar contas sem timeline )  "
-
+echo "  - Obs: essa porcentagem foi feita com base na população total verificada: **${populationAll}** contas ( Botometer não consegue estudar contas sem timeline )  "
+echo "  "
 echo "# English  "
 
 echo "## botCollector  "
