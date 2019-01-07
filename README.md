@@ -15,10 +15,10 @@ Gráfico mais recente:
 Botometer: https://botometer.iuni.iu.edu/#!/  
 Twitter API: https://developer.twitter.com/en/docs.html  
 ## Estatísticas:  
-- Porcentagem de contas com probabilidade acima de **75%** de serem bots: **25.8668599734203%**  
-  - Obs: essa porcentagem foi feita com base em uma população de **24831** contas ( a mesma usada no gráfico )  
-- Porcentagem de contas sem timeline: **35.73264781491%**  
-  - Obs: essa porcentagem foi feita com base na população total verificada: **43179** contas ( Botometer não consegue estudar contas sem timeline )  
+- Porcentagem de contas com probabilidade acima de **75%** de serem bots: **25.871788676814%**  
+  - Obs: essa porcentagem foi feita com base em uma população de **24834** contas ( a mesma usada no gráfico )  
+- Porcentagem de contas sem timeline: **35.7316536600051%**  
+  - Obs: essa porcentagem foi feita com base na população total verificada: **43183** contas ( Botometer não consegue estudar contas sem timeline )  
   
 # English  
 ## botCollector  
