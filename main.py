@@ -1,11 +1,16 @@
 import sqlite3
 import subprocess
+import time
 from datetime import datetime
 
 import botometer
 import tweepy
 from twitter import TwitterError
 import twitter
+
+from checkIfExists import checkIfExists
+from reportBots import reportBots
+from reportEmptyUsers import reportEmptyUsers
 
 if __name__ == '__main__':
     while True:
@@ -18,8 +23,10 @@ if __name__ == '__main__':
             c = conn.cursor()
             try:
                 c.execute(
-                    '''CREATE TABLE {} (userId integer, userName text, capEnglish real, capUniversal real)'''.format(
+                    '''CREATE TABLE {} (userId integer, userName text, capEnglish real, capUniversal real, reported 
+                    integer, lastCheck integer)'''.format(
                         TARGET_USER))
+                conn.commit()
             except Exception as error:
                 print("Table Exception: " + error.__str__())
 
@@ -34,6 +41,8 @@ if __name__ == '__main__':
             twitter_app_auth = {
                 'consumer_key': CONSUMER_KEY,
                 'consumer_secret': CONSUMER_SECRET,
+                'access_token': ACCESS_TOKEN_KEY,
+                'access_token_secret': ACCESS_TOKEN_SECRET
             }
 
             next_cursor = -1
@@ -41,22 +50,36 @@ if __name__ == '__main__':
                 print("Starting Twitter API")
                 api = twitter.Api(consumer_key=CONSUMER_KEY,
                                   consumer_secret=CONSUMER_SECRET,
+                                  access_token_key=ACCESS_TOKEN_KEY,
+                                  access_token_secret=ACCESS_TOKEN_SECRET,
                                   sleep_on_rate_limit=True,
                                   application_only_auth=True)
                 print("Starting Botometer API")
                 bom = botometer.Botometer(wait_on_ratelimit=True,
                                           mashape_key=mashape_key,
                                           **twitter_app_auth)
+                bom.twitter_api.wait_on_rate_limit_notify = True
 
+                conn = sqlite3.connect('data/database.db')
+                c = conn.cursor()
                 # create plots and update git server
-                if iteration == 10:
+                if iteration == 5:
+                    # Check saved accounts for deleted ones
+                    checkIfExists(TARGET_USER, bom.twitter_api)
                     subprocess.call(["bash", "update.sh"])
                     iteration = 0
                 iteration = iteration + 1
-
                 limit = api.CheckRateLimit("https://api.twitter.com/1.1/followers/list.json")
                 print("Next rate reset (Twitter):" + datetime.utcfromtimestamp(limit[2]).strftime('%Y-%m-%d %H:%M:%S'))
                 conn.commit()
+
+                print("Reporting bots")
+                reportBots(TARGET_USER, bom.twitter_api, 0.95)
+                print("Reporting empty users")
+                reportEmptyUsers(TARGET_USER, bom.twitter_api)
+
+
+
                 try:
                     next_cursor, previous_cursor, followers = api.GetFollowersPaged(screen_name=TARGET_USER,
                                                                                     cursor=next_cursor)
@@ -79,23 +102,26 @@ if __name__ == '__main__':
                                   (follower.AsDict()["id"],))
                         if c.fetchone() is not None:
                             continue
+                        # TODO change to check_accounts_in
                         result = bom.check_account(follower.AsDict()["id"])
                         # store user data
-                        c.execute('INSERT INTO {} VALUES (?,?,?,?)'.format(TARGET_USER),
+                        c.execute('INSERT INTO {} VALUES (?,?,?,?,?,?)'.format(TARGET_USER),
                                   [result["user"]["id_str"], result["user"]["screen_name"], result["cap"]["english"],
-                                   result["cap"]["universal"]])
+                                   result["cap"]["universal"], None, time.time()])
                     except botometer.NoTimelineError as error:
-                        # some accounts have no timeline, so botometer cannot score them
-                        c.execute('INSERT INTO {} VALUES (?,?,?,?)'.format(TARGET_USER),
+                        # some accounts have no timeline, so botometer cannot score them - still suspicious
+                        c.execute('INSERT INTO {} VALUES (?,?,?,?,?,?)'.format(TARGET_USER),
                                   [follower.AsDict()["id"], follower.AsDict()["screen_name"],
-                                   -1, -1])
+                                   -1, -1, None, time.time()])
                     except tweepy.TweepError:
                         # some accounts have protected tweets, so botometer cannot score them
-                        c.execute('INSERT INTO {} VALUES (?,?,?,?)'.format(TARGET_USER),
+                        c.execute('INSERT INTO {} VALUES (?,?,?,?,?,?)'.format(TARGET_USER),
                                   [follower.AsDict()["id"], follower.AsDict()["screen_name"],
-                                   -2, -2])
+                                   -2, -2, None, time.time()])
+                        print("Waiting for possible server error")
+                        time.sleep(10)
                     except Exception as error:
                         print("Default behavior for error: " + error.__str__())
-                        conn.commit()
+                conn.commit()
         except Exception as error:
             print("Uncaught exception: " + error.__str__())
