@@ -7,7 +7,10 @@ percentageBots=$3
 populationPlot=$4
 percentageNoTimeline=$5
 populationAll=$6
-populationAll="${populationAll//\"}"
+percentageRemoved=$7
+percentageReported=$8
+percentageReportedAndRemoved=$9
+percentageReportedAndRemoved="${percentageReportedAndRemoved//\"}"
 
 echo "# Português  "
 
@@ -41,8 +44,11 @@ echo "- Porcentagem de contas com probabilidade acima de **${cutValue}%** de ser
 echo "  - Obs: essa porcentagem foi feita com base em uma população de **${populationPlot}** contas ( a mesma usada no gráfico )  "
 
 echo "- Porcentagem de contas sem timeline: **${percentageNoTimeline}%**  "
+echo "- Porcentagem de contas removidas: **${percentageRemoved}%**  "
+echo "- Porcentagem de contas reportadas por nós: **${percentageReported}%**  "
+echo "- Porcentagem de contas reportadas por nós *e* removidas: **${percentageReportedAndRemoved}%**  "
 
-echo "  - Obs: essa porcentagem foi feita com base na população total verificada: **${populationAll}** contas ( Botometer não consegue estudar contas sem timeline )  "
+echo "  - Obs: essas porcentagens foram feitas com base na população total verificada: **${populationAll}** contas ( Botometer não consegue estudar contas sem timeline )  "
 echo "  "
 echo "# English  "
 
