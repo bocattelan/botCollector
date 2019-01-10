@@ -28,7 +28,7 @@ percentageNoTimeline = (sum(df$capUniversal == -1)/nrow(df))*100
 populationAll = nrow(df)
 percentageRemoved = (sum(df$lastCheck == 0, na.rm = TRUE)/nrow(df))*100
 percentageReported = (sum(df$reported == 1, na.rm = TRUE)/nrow(df))*100
-percentageReportedAndRemoved = (sum(df$reported == 1 && df$lastCheck == 0, na.rm = TRUE)/nrow(df))*100
+percentageReportedAndRemoved = (sum(df$reported == 1 & df$lastCheck == 0, na.rm = TRUE)/nrow(df))*100
 
 # cutValue, percentageBots, populationPlot, percentageNoTimeline, populationAll, percentageRemoved, percentageReported, percentageReportedAndRemoved
 paste(75, percentage75bot, populationPlot, percentageNoTimeline, populationAll,
