@@ -1,3 +1,4 @@
+import os
 import sqlite3
 import subprocess
 import time
@@ -5,14 +6,19 @@ from datetime import datetime
 
 import botometer
 import tweepy
+from dateutil.tz import tzlocal
 from twitter import TwitterError
 import twitter
 
+from Report.reportUsers import reportUsers
 from checkIfExists import checkIfExists
-from reportBots import reportBots
-from reportEmptyUsers import reportEmptyUsers
+from Report.reportBots import reportBots, reportBot
+from Report.reportEmptyUsers import reportEmptyUsers
 
 if __name__ == '__main__':
+    if not os.path.exists("data/"):
+        os.makedirs("data/")
+
     while True:
         try:
             iteration = 0
@@ -67,22 +73,21 @@ if __name__ == '__main__':
                     # Check saved accounts for deleted ones
                     checkIfExists(TARGET_USER, bom.twitter_api)
                     subprocess.call(["bash", "update.sh"])
+                    time.sleep(2)
                     iteration = 0
                 iteration = iteration + 1
                 limit = api.CheckRateLimit("https://api.twitter.com/1.1/followers/list.json")
-                print("Next rate reset (Twitter):" + datetime.utcfromtimestamp(limit[2]).strftime('%Y-%m-%d %H:%M:%S'))
+                print("Next rate reset (Followers): " + datetime.fromtimestamp(limit[2], tzlocal()).strftime(
+                    '%Y-%m-%d %H:%M:%S'))
+
+                # reportUsers(TARGET_USER, bom.twitter_api)
                 conn.commit()
-
-                print("Reporting bots")
-                reportBots(TARGET_USER, bom.twitter_api, 0.95)
-                print("Reporting empty users")
-                reportEmptyUsers(TARGET_USER, bom.twitter_api)
-
-
 
                 try:
                     next_cursor, previous_cursor, followers = api.GetFollowersPaged(screen_name=TARGET_USER,
-                                                                                    cursor=next_cursor)
+                                                                                    cursor=next_cursor,
+                                                                                    include_user_entities=True,
+                                                                                    skip_status=True)
                     print("Got followers")
                 except TwitterError as error:
                     print("Could not get followers: " + error.__str__())
@@ -93,6 +98,7 @@ if __name__ == '__main__':
                     c.close()
                     exit(0)
                 counter = 1
+
                 for follower in followers:
                     try:
                         print("Checking " + follower.AsDict()["screen_name"] + " counter: " + counter.__str__())
@@ -100,7 +106,9 @@ if __name__ == '__main__':
                         # check if it already exists
                         c.execute('SELECT * FROM {} WHERE userId=?'.format(TARGET_USER),
                                   (follower.AsDict()["id"],))
-                        if c.fetchone() is not None:
+                        if c.execute("SELECT EXISTS(SELECT 1 FROM {} WHERE userId=?)".format(TARGET_USER),
+                                     [follower.id]).fetchone()[0] == 1:
+                            print("User already exists: " + follower.screen_name)
                             continue
                         # TODO change to check_accounts_in
                         result = bom.check_account(follower.AsDict()["id"])
@@ -108,6 +116,16 @@ if __name__ == '__main__':
                         c.execute('INSERT INTO {} VALUES (?,?,?,?,?,?)'.format(TARGET_USER),
                                   [result["user"]["id_str"], result["user"]["screen_name"], result["cap"]["english"],
                                    result["cap"]["universal"], None, time.time()])
+
+                        if float(result["cap"]["universal"]) >= 0.9:
+                            limit = bom.twitter_api.rate_limit_status()["resources"]['users']['/users/report_spam']
+                            limitSpam = int(limit["remaining"])
+                            print(
+                                "Remaining rate (Spam): " + limitSpam.__str__() + " which resets at " +
+                                datetime.fromtimestamp(limit["reset"], tzlocal()).strftime('%Y-%m-%d %H:%M:%S'))
+                            possibleBot = [follower.AsDict()["id"], follower.AsDict()["screen_name"],
+                                           result["cap"]["english"], result["cap"]["universal"]]
+                            reportBot(TARGET_USER, bom.twitter_api, possibleBot, conn)
                     except botometer.NoTimelineError as error:
                         # some accounts have no timeline, so botometer cannot score them - still suspicious
                         c.execute('INSERT INTO {} VALUES (?,?,?,?,?,?)'.format(TARGET_USER),
@@ -115,9 +133,9 @@ if __name__ == '__main__':
                                    -1, -1, None, time.time()])
                     except tweepy.TweepError:
                         # some accounts have protected tweets, so botometer cannot score them
-                        c.execute('INSERT INTO {} VALUES (?,?,?,?,?,?)'.format(TARGET_USER),
-                                  [follower.AsDict()["id"], follower.AsDict()["screen_name"],
-                                   -2, -2, None, time.time()])
+                        # c.execute('INSERT INTO {} VALUES (?,?,?,?,?,?)'.format(TARGET_USER),
+                        #         [follower.AsDict()["id"], follower.AsDict()["screen_name"],
+                        #         -2, -2, None, time.time()])
                         print("Waiting for possible server error")
                         time.sleep(10)
                     except Exception as error:
