@@ -14,6 +14,7 @@ from Report.reportUsers import reportUsers
 from checkIfExists import checkIfExists
 from Report.reportBots import reportBots, reportBot
 from Report.reportEmptyUsers import reportEmptyUsers
+from checkUsers import checkUser
 
 if __name__ == '__main__':
     if not os.path.exists("data/"):
@@ -97,49 +98,10 @@ if __name__ == '__main__':
                     api.ClearCredentials()
                     c.close()
                     exit(0)
-                counter = 1
 
                 for follower in followers:
-                    try:
-                        print("Checking " + follower.AsDict()["screen_name"] + " counter: " + counter.__str__())
-                        counter = counter + 1
-                        # check if it already exists
-                        c.execute('SELECT * FROM {} WHERE userId=?'.format(TARGET_USER),
-                                  (follower.AsDict()["id"],))
-                        if c.execute("SELECT EXISTS(SELECT 1 FROM {} WHERE userId=?)".format(TARGET_USER),
-                                     [follower.id]).fetchone()[0] == 1:
-                            print("User already exists: " + follower.screen_name)
-                            continue
-                        # TODO change to check_accounts_in
-                        result = bom.check_account(follower.AsDict()["id"])
-                        # store user data
-                        c.execute('INSERT INTO {} VALUES (?,?,?,?,?,?)'.format(TARGET_USER),
-                                  [result["user"]["id_str"], result["user"]["screen_name"], result["cap"]["english"],
-                                   result["cap"]["universal"], None, time.time()])
-
-                        if float(result["cap"]["universal"]) >= 0.9:
-                            limit = bom.twitter_api.rate_limit_status()["resources"]['users']['/users/report_spam']
-                            limitSpam = int(limit["remaining"])
-                            print(
-                                "Remaining rate (Spam): " + limitSpam.__str__() + " which resets at " +
-                                datetime.fromtimestamp(limit["reset"], tzlocal()).strftime('%Y-%m-%d %H:%M:%S'))
-                            possibleBot = [follower.AsDict()["id"], follower.AsDict()["screen_name"],
-                                           result["cap"]["english"], result["cap"]["universal"]]
-                            reportBot(TARGET_USER, bom.twitter_api, possibleBot, conn)
-                    except botometer.NoTimelineError as error:
-                        # some accounts have no timeline, so botometer cannot score them - still suspicious
-                        c.execute('INSERT INTO {} VALUES (?,?,?,?,?,?)'.format(TARGET_USER),
-                                  [follower.AsDict()["id"], follower.AsDict()["screen_name"],
-                                   -1, -1, None, time.time()])
-                    except tweepy.TweepError:
-                        # some accounts have protected tweets, so botometer cannot score them
-                        # c.execute('INSERT INTO {} VALUES (?,?,?,?,?,?)'.format(TARGET_USER),
-                        #         [follower.AsDict()["id"], follower.AsDict()["screen_name"],
-                        #         -2, -2, None, time.time()])
-                        print("Waiting for possible server error")
-                        time.sleep(10)
-                    except Exception as error:
-                        print("Default behavior for error: " + error.__str__())
+                    checkUser(TARGET_USER, bom, follower.id, follower.screen_name, conn)
                 conn.commit()
+                reportEmptyUsers(TARGET_USER, bom.twitter_api, 1)
         except Exception as error:
             print("Uncaught exception: " + error.__str__())

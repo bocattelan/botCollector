@@ -12,7 +12,7 @@ def reportUsers(TARGET_USER, twitter_api):
     if limitSpam > 0:
         print("Reporting bots")
         reportBots(TARGET_USER, twitter_api, 0.95)
-        limit = rate_limit_api.CheckRateLimit("https://api.twitter.com/1.1/users/report_spam.json")
+        limit = twitter_api.CheckRateLimit("https://api.twitter.com/1.1/users/report_spam.json")
         limitSpam = int(limit[1])
     if limitSpam > 0:
         print("Remaining rate (Spam, after reporting bots): " + limitSpam.__str__())

@@ -28,13 +28,13 @@ def checkIfExists(TARGET_USER, twitter_api):
                 if userId in userInResponse:
                     c.execute(
                         "UPDATE {} SET lastCheck = ? WHERE userId = ?".format(TARGET_USER),
-                        [requestTime, userId])
+                        (requestTime, userId,))
                 else:
                     c.execute(
                         "UPDATE {} SET lastCheck = 0 WHERE userId = ?".format(TARGET_USER),
                         [userId])
                     userName = c.execute('SELECT userName FROM {} WHERE userId = ?'.format(
-                        TARGET_USER), [userId]).fetchone()
+                        TARGET_USER), (userId,)).fetchone()
                     print("Account removed: " + userName[0])
             conn.commit()
         except Exception as error:
