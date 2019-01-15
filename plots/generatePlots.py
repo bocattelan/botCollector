@@ -1,0 +1,91 @@
+import sqlite3
+
+from rpy2 import robjects
+from rpy2.robjects.packages import importr
+
+
+def generate_plot(TARGET_USER):
+    # The R 'print' function
+    # rprint = robjects.globalenv.get("print")
+    # grdevices = importr('grDevices')
+    #
+    # databaseList = dplyr.src_sqlite("/Users/bocattelan/Workspace/botCollector/data/database.db", create=False)
+    # lattice = importr('lattice')
+    # target_table = databaseList.get_table(TARGET_USER)
+    # dataFrame = DataFrame(target_table.select("capUniversal","lastCheck").filter("capUniversal >= 0 & lastCheck != 0").mutate(capUniversal="capUniversal*100").collect())
+    # p = lattice.histogram(x=dataFrame.rx2("capUniversal"), type="percent")
+    #
+    # grdevices.png('test.png')
+    # rprint(p)
+    # grdevices.dev_off()
+    #
+    # grdevices.pdf('test.pdf')
+    # rprint(p)
+    # grdevices.dev_off()
+    grdevices = importr('grDevices')
+    lattice = importr('lattice')
+    robjects.r('''
+    
+library(RSQLite)
+#library(ggplot2)
+library(lattice)
+
+sqlite <- dbDriver("SQLite")
+conn <- dbConnect(sqlite, "/Users/bocattelan/Workspace/botCollector/data/database.db", create = FALSE)
+
+df = dbGetQuery(conn, paste("SELECT * from {} WHERE capUniversal >= 0 AND lastCheck != 0"))
+
+histPlot = histogram(df$capUniversal * 100, type = "percent", main = paste("Twitter: {}, pop: ", nrow(df)), xlab = "Prob. of being a bot | Prob. de ser um robô", ylab = "Relative number of accounts | Número relativo de contas", breaks=seq(from=0,to=100,by=5))
+
+percentage75bot = (sum(df$capUniversal > 0.75)/nrow(df))*100
+populationPlot = nrow(df)
+df = dbGetQuery(conn, paste("SELECT * from {}"))
+percentageNoTimeline = (sum(df$capUniversal == -1)/nrow(df))*100
+populationAll = nrow(df)
+percentageRemoved = (sum(df$lastCheck == 0, na.rm = TRUE)/nrow(df))*100
+percentageReported = (sum(df$reported == 1, na.rm = TRUE)/nrow(df))*100
+percentageReportedAndRemoved = (sum(df$reported == 1 & df$lastCheck == 0, na.rm = TRUE)/nrow(df))*100
+
+'''.format(TARGET_USER, TARGET_USER, TARGET_USER, TARGET_USER))
+    rprint = robjects.globalenv.get("print")
+    grdevices.png(file="/Users/bocattelan/Workspace/botCollector/plots/png/plot_" + TARGET_USER + ".png")
+    rprint(x=robjects.r['histPlot'])
+    grdevices.dev_off()
+
+    grdevices.pdf(file="/Users/bocattelan/Workspace/botCollector/plots/pdf/plot_" + TARGET_USER + ".pdf")
+    rprint(x=robjects.r['histPlot'])
+    grdevices.dev_off()
+
+    print("Estatísticas para " + TARGET_USER + " com pop. total " + robjects.r["populationAll"][0].__str__())
+    print("Porcentagem de contas ativas com prob. acima de 75%: " + robjects.r["percentage75bot"][0].__str__())
+    print("Porcentagem de contas sem timeline: " + robjects.r["percentageNoTimeline"][0].__str__())
+    print("Porcentagem de contas removidas: " + robjects.r["percentageRemoved"][0].__str__())
+    print("Porcentagem de contas reportadas: " + robjects.r["percentageReported"][0].__str__())
+    print("Porcentagem de contas reportadas que foram removidas: " + robjects.r["percentageReportedAndRemoved"][0].__str__())
+    print("")
+
+    file_object = open("/Users/bocattelan/Workspace/botCollector/data/facebook_post.txt", "a")
+    file_object.write("---------------------------------------------------------\n")
+    file_object.write("Estatísticas para " + TARGET_USER + " com pop. total " + robjects.r["populationAll"][0].__str__() + '\n')
+    file_object.write("Porcentagem de contas ativas com prob. acima de 75%: " + robjects.r["percentage75bot"][0].__str__() + '\n')
+    file_object.write("Mesma pop. do gráfico: " + robjects.r["populationPlot"][0].__str__() + '\n')
+    file_object.write('\n')
+    file_object.write("Porcentagem de contas sem timeline: " + robjects.r["percentageNoTimeline"][0].__str__() + '\n')
+    file_object.write("Porcentagem de contas removidas: " + robjects.r["percentageRemoved"][0].__str__() + '\n')
+    file_object.write("Porcentagem de contas reportadas: " + robjects.r["percentageReported"][0].__str__() + '\n')
+    file_object.write("Porcentagem de contas reportadas que foram removidas: " + robjects.r["percentageReportedAndRemoved"][0].__str__() + '\n')
+    file_object.write("Pop. total: " + robjects.r["populationAll"][0].__str__() + '\n')
+    file_object.write('\n')
+    file_object.close()
+
+def generate_all_plots(conn):
+    file_object = open("../data/facebook_post.txt", "w")
+    c = conn.cursor()
+    targets = c.execute("SELECT name FROM sqlite_master WHERE type='table';").fetchall()
+    for target in targets:
+        generate_plot(target[0])
+
+
+if __name__ == '__main__':
+    conn = sqlite3.connect('../data/database.db')
+    generate_all_plots(conn)

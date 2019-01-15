@@ -1,20 +1,19 @@
 import os
 import sqlite3
 import subprocess
+import sys
 import time
 from datetime import datetime
 
 import botometer
-import tweepy
 from dateutil.tz import tzlocal
 from twitter import TwitterError
 import twitter
 
-from Report.reportUsers import reportUsers
 from checkIfExists import checkIfExists
-from Report.reportBots import reportBots, reportBot
 from Report.reportEmptyUsers import reportEmptyUsers
 from checkUsers import checkUser
+from plots.generatePlots import generate_all_plots, generate_plot
 
 if __name__ == '__main__':
     if not os.path.exists("data/"):
@@ -24,7 +23,11 @@ if __name__ == '__main__':
         try:
             iteration = 0
             # user being studied
-            TARGET_USER = "jairbolsonaro"
+            #TARGET_USER = "jairbolsonaro"
+            #TARGET_USER = "xuxameneghel"
+            TARGET_USER = "CarlosBolsonaro"
+            #path = os.path.dirname(sys.modules['__main__'].__file__)
+
 
             conn = sqlite3.connect('data/database.db')
             c = conn.cursor()
@@ -73,7 +76,9 @@ if __name__ == '__main__':
                 if iteration == 5:
                     # Check saved accounts for deleted ones
                     checkIfExists(TARGET_USER, bom.twitter_api)
-                    subprocess.call(["bash", "update.sh"])
+                    # TODO use a separate process with gitpython
+                    #subprocess.call(["bash", "update.sh"])
+                    generate_plot(TARGET_USER)
                     time.sleep(2)
                     iteration = 0
                 iteration = iteration + 1
@@ -87,7 +92,7 @@ if __name__ == '__main__':
                 try:
                     next_cursor, previous_cursor, followers = api.GetFollowersPaged(screen_name=TARGET_USER,
                                                                                     cursor=next_cursor,
-                                                                                    include_user_entities=True,
+                                                                                    include_user_entities=False,
                                                                                     skip_status=True)
                     print("Got followers")
                 except TwitterError as error:
@@ -98,9 +103,12 @@ if __name__ == '__main__':
                     api.ClearCredentials()
                     c.close()
                     exit(0)
-
+                counter = 1
                 for follower in followers:
                     checkUser(TARGET_USER, bom, follower.id, follower.screen_name, conn)
+                    counter = counter+1
+                    if (counter % 20) == 0:
+                        print("Checked " + counter.__str__() + " users")
                 conn.commit()
                 reportEmptyUsers(TARGET_USER, bom.twitter_api, 1)
         except Exception as error:
