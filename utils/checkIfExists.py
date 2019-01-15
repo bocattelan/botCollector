@@ -1,9 +1,9 @@
-import sqlite3
 import time
+
+from utils.config import conn
 
 
 def checkIfExists(TARGET_USER, twitter_api):
-    conn = sqlite3.connect('data/database.db')
     c = conn.cursor()
     getter = conn.cursor()
     print("Testing if users still exist")
