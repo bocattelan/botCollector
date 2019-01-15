@@ -16,8 +16,8 @@ from utils.config import conn
 from utils.config import MAIN_DIRECTORY
 
 if __name__ == '__main__':
-    if not os.path.exists("data/"):
-        os.makedirs("data/")
+    if not os.path.exists( MAIN_DIRECTORY + "/data/"):
+        os.makedirs(MAIN_DIRECTORY + "/data/")
 
     while True:
         try:
@@ -39,7 +39,16 @@ if __name__ == '__main__':
                 print("Table Exception: " + error.__str__())
 
             # create twitter api object, using the tokens from a file called tokens.conf inside the data folder
+            if not os.path.isfile(MAIN_DIRECTORY + "/data/tokens.conf"):
+                print("You need a token file with the following tokens (in order):")
+                print("CONSUMER KEY (twitter)")
+                print("CONSUMER SECRET (twitter)")
+                print("ACCESS KEY (twitter)")
+                print("ACCESS TOKEN (twitter)")
+                print("MASHAPE KEY (botometer)")
+                exit(-1)
             tokenFile = open(MAIN_DIRECTORY + "/data/tokens.conf", "r")
+
             CONSUMER_KEY = tokenFile.readline().__str__().rstrip('\n')
             CONSUMER_SECRET = tokenFile.readline().__str__().rstrip('\n')
             ACCESS_TOKEN_KEY = tokenFile.readline().__str__().rstrip('\n')
