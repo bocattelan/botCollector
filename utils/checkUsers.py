@@ -9,7 +9,7 @@ from Report.reportBots import reportBot
 
 
 # TODO add user creation date
-def checkUser(TARGET_USER, bom_api, user_id, user_name):
+def checkUser(TARGET_USER, bom_api, user_id, user_name, created_at):
     c = config.conn.cursor()
     try:
         print("Checking " + user_name)
@@ -23,9 +23,9 @@ def checkUser(TARGET_USER, bom_api, user_id, user_name):
         # TODO change to check_accounts_in
         result = bom_api.check_account(user_id)
         # store user data
-        c.execute('INSERT INTO {} VALUES (?,?,?,?,?,?)'.format(TARGET_USER),
+        c.execute('INSERT INTO {} VALUES (?,?,?,?,?,?,?)'.format(TARGET_USER),
                   (result["user"]["id_str"], result["user"]["screen_name"], result["cap"]["english"],
-                   result["cap"]["universal"], None, time.time(),))
+                   result["cap"]["universal"], None, time.time(), created_at,))
 
         if float(result["cap"]["universal"]) >= 0.9:
             limit = bom_api.twitter_api.rate_limit_status()["resources"]['users']['/users/report_spam']
@@ -39,9 +39,9 @@ def checkUser(TARGET_USER, bom_api, user_id, user_name):
     except botometer.NoTimelineError:
         print("No timeline")
         # some accounts have no timeline, so botometer cannot score them - still suspicious
-        c.execute('INSERT INTO {} VALUES (?,?,?,?,?,?)'.format(TARGET_USER),
+        c.execute('INSERT INTO {} VALUES (?,?,?,?,?,?,?)'.format(TARGET_USER),
                   (user_id, user_name,
-                   -1, -1, None, time.time(),))
+                   -1, -1, None, time.time(), created_at,))
     except tweepy.TweepError:
         print("Waiting for possible server error")
         time.sleep(10)
