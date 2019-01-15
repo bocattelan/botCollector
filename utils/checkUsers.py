@@ -1,5 +1,6 @@
+import calendar
 import time
-from datetime import datetime
+from datetime import datetime, timezone
 import botometer
 import tweepy
 from dateutil.tz import tzlocal
@@ -9,7 +10,20 @@ from Report.reportBots import reportBot
 
 
 # TODO add user creation date
-def checkUser(TARGET_USER, bom_api, user_id, user_name, created_at):
+def checkUser(TARGET_USER, bom_api, user):
+    user_id = user.id_str
+    user_name = user.screen_name
+    created_at = user.created_at
+    location = user.location
+    lang = user.lang
+    favorites_count = user.favourites_count
+    followers_count = user.followers_count
+    listed_count = user.listed_count
+    friends_count = user.friends_count
+    statuses_count = user.statuses_count
+
+    user_info = [created_at, location, lang, favorites_count, followers_count, listed_count, friends_count, statuses_count]
+
     c = config.conn.cursor()
     try:
         print("Checking " + user_name)
@@ -23,9 +37,10 @@ def checkUser(TARGET_USER, bom_api, user_id, user_name, created_at):
         # TODO change to check_accounts_in
         result = bom_api.check_account(user_id)
         # store user data
-        c.execute('INSERT INTO {} VALUES (?,?,?,?,?,?,?)'.format(TARGET_USER),
-                  (result["user"]["id_str"], result["user"]["screen_name"], result["cap"]["english"],
-                   result["cap"]["universal"], None, time.time(), created_at,))
+        # TODO add location, lang, favorites countm followers count, listed count,friends count, statuses count,
+        c.execute('INSERT INTO {} VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)'.format(TARGET_USER),
+                  [user_id, user_name, result["cap"]["english"],
+                   result["cap"]["universal"], 0, datetime.now(timezone.utc).ctime()] + user_info)
 
         if float(result["cap"]["universal"]) >= 0.9:
             limit = bom_api.twitter_api.rate_limit_status()["resources"]['users']['/users/report_spam']
@@ -39,9 +54,9 @@ def checkUser(TARGET_USER, bom_api, user_id, user_name, created_at):
     except botometer.NoTimelineError:
         print("No timeline")
         # some accounts have no timeline, so botometer cannot score them - still suspicious
-        c.execute('INSERT INTO {} VALUES (?,?,?,?,?,?,?)'.format(TARGET_USER),
-                  (user_id, user_name,
-                   -1, -1, None, time.time(), created_at,))
+        c.execute('INSERT INTO {} VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)'.format(TARGET_USER),
+                  [user_id, user_name,
+                   -1, -1, 0, datetime.now(timezone.utc).ctime()] + user_info)
     except tweepy.TweepError:
         print("Waiting for possible server error")
         time.sleep(10)

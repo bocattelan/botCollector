@@ -1,7 +1,8 @@
-import time
+from datetime import datetime, timezone
 
 import tweepy
 from utils.config import conn
+
 
 def reportBots(TARGET_USER, twitter_api, probabilityCut):
     c = conn.cursor()
@@ -19,7 +20,7 @@ def reportBot(TARGET_USER, twitter_api, user):
     try:
         twitter_api.report_spam(user_id=user[0])
         c.execute("UPDATE {} SET reported = ?, lastCheck = ? WHERE userId = ? AND userName = ?".format(TARGET_USER),
-                  (1, time.time(), user[0], user[1],))
+                  (1, datetime.now(timezone.utc).ctime(), user[0], user[1],))
         conn.commit()
         print("Reported user " + user[1] + " with probability " + user[3].__str__())
     except tweepy.TweepError as error:

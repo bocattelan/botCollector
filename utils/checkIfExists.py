@@ -1,4 +1,5 @@
-import time
+
+from datetime import datetime, timezone
 
 from utils.config import conn
 
@@ -10,14 +11,14 @@ def checkIfExists(TARGET_USER, twitter_api):
     # usersAll = c.execute(
     #    'SELECT userId FROM {} WHERE (lastCheck!=0 or lastCheck IS NULL)'.format(
     #        TARGET_USER)).fetchall()
-    users = getter.execute('SELECT userId FROM {} WHERE (lastCheck!=0 or lastCheck IS NULL)'.format(TARGET_USER)).fetchmany(100)
+    users = getter.execute('SELECT userId FROM {} WHERE (lastCheck!=0)'.format(TARGET_USER)).fetchmany(100)
     while len(users) != 0:
         try:
             print("Collected " + len(users).__str__() + " users from table " + TARGET_USER.__str__())
             userIds = [item[0] for item in users]
             userResponse = twitter_api.lookup_users(user_ids=userIds, include_entities=False)
             userInResponse = [item["id"] for item in userResponse]
-            requestTime = time.time()
+            requestTime = datetime.now(timezone.utc).ctime()
             for userId in userIds:
                 # Check if this id is in the response
                 if userId in userInResponse:

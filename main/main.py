@@ -25,9 +25,13 @@ if __name__ == '__main__':
         try:
             c = conn.cursor()
             try:
+                # [created_at, location, lang, favorites_count, followers_count, listed_count, friends_count,
+                # statuses_count]
                 c.execute(
-                    '''CREATE TABLE {} (userId integer, userName text, capEnglish real, capUniversal real, reported 
-                    integer, lastCheck integer, createdAt integer)'''.format(
+                    '''CREATE TABLE {} (userId text, userName text, capEnglish real, capUniversal real, reported 
+                    integer, lastCheck text, createdAt text, location text, language text, favoritesCount integer, 
+                    followersCount integer, listedCount integer, friendsCount integer, statusesCount 
+                    integer)'''.format(
                         TARGET_USER))
                 conn.commit()
                 print("Created table " + TARGET_USER)
@@ -104,7 +108,8 @@ if __name__ == '__main__':
                 counter = 1
                 for follower in followers:
                     try:
-                        checkUser(TARGET_USER, bom, follower.id, follower.screen_name, follower.created_at)
+
+                        checkUser(TARGET_USER, bom, follower)
                     except Exception as error:
                         print("Failed to check " + follower.screen_name)
                         print("Unexpected error: " + error.__str__())
