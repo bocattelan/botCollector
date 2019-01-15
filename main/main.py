@@ -14,27 +14,23 @@ from utils.checkUsers import checkUser
 from plots.generatePlots import generate_plot
 from utils.config import conn
 from utils.config import MAIN_DIRECTORY
+from itertools import cycle
 
 if __name__ == '__main__':
-    if not os.path.exists( MAIN_DIRECTORY + "/data/"):
+    if not os.path.exists(MAIN_DIRECTORY + "/data/"):
         os.makedirs(MAIN_DIRECTORY + "/data/")
-
-    while True:
+    TARGET_USERs = ["jairbolsonaro", "xuxameneghel", "CarlosBolsonaro", "leandroruschel", "cnn"]
+    userPool = cycle(TARGET_USERs)
+    for TARGET_USER in userPool:
         try:
-            iteration = 0
-            # user being studied
-            #TARGET_USER = "jairbolsonaro"
-            #TARGET_USER = "xuxameneghel"
-            TARGET_USER = "CarlosBolsonaro"
-            #path = os.path.dirname(sys.modules['__main__'].__file__)
-
             c = conn.cursor()
             try:
                 c.execute(
                     '''CREATE TABLE {} (userId integer, userName text, capEnglish real, capUniversal real, reported 
-                    integer, lastCheck integer)'''.format(
+                    integer, lastCheck integer, createdAt integer)'''.format(
                         TARGET_USER))
                 conn.commit()
+                print("Created table " + TARGET_USER)
             except Exception as error:
                 print("Table Exception: " + error.__str__())
 
@@ -79,21 +75,16 @@ if __name__ == '__main__':
 
                 conn = sqlite3.connect(MAIN_DIRECTORY + '/data/database.db')
                 c = conn.cursor()
+
                 # create plots and update git server
-                if iteration == 5:
-                    # Check saved accounts for deleted ones
-                    checkIfExists(TARGET_USER, bom.twitter_api)
-                    # TODO use a separate process with gitpython
-                    #subprocess.call(["bash", "update.sh"])
-                    generate_plot(TARGET_USER)
-                    time.sleep(2)
-                    iteration = 0
-                iteration = iteration + 1
+                # Check saved accounts for deleted ones
+                checkIfExists(TARGET_USER, bom.twitter_api)
+                # TODO use a separate process with gitpython
+                # subprocess.call(["bash", "update.sh"])
+                generate_plot(TARGET_USER)
                 limit = api.CheckRateLimit("https://api.twitter.com/1.1/followers/list.json")
                 print("Next rate reset (Followers): " + datetime.fromtimestamp(limit[2], tzlocal()).strftime(
                     '%Y-%m-%d %H:%M:%S'))
-
-                # reportUsers(TARGET_USER, bom.twitter_api)
                 conn.commit()
 
                 try:
@@ -112,8 +103,12 @@ if __name__ == '__main__':
                     exit(0)
                 counter = 1
                 for follower in followers:
-                    checkUser(TARGET_USER, bom, follower.id, follower.screen_name,)
-                    counter = counter+1
+                    try:
+                        checkUser(TARGET_USER, bom, follower.id, follower.screen_name, follower.created_at)
+                    except Exception as error:
+                        print("Failed to check " + follower.screen_name)
+                        print("Unexpected error: " + error.__str__())
+                    counter = counter + 1
                     if (counter % 20) == 0:
                         print("Checked " + counter.__str__() + " users")
                 conn.commit()
