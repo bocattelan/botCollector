@@ -66,7 +66,7 @@ percentageReportedAndRemoved = (sum(df$reported == 1 & df$lastCheck == 0, na.rm 
         0].__str__())
     print("")
 
-    file_object = open("/Users/bocattelan/Workspace/botCollector/data/facebook_post.txt", "a")
+    file_object = open(config.MAIN_DIRECTORY + "/data/facebook_post.txt", "a")
     file_object.write("---------------------------------------------------------\n")
     file_object.write(
         "Estatísticas para " + TARGET_USER + " com pop. total " + robjects.r["populationAll"][0].__str__() + '\n')
