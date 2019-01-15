@@ -1,11 +1,9 @@
-import sqlite3
 import time
 
 import tweepy
-
+from utils.config import conn
 
 def reportBots(TARGET_USER, twitter_api, probabilityCut):
-    conn = sqlite3.connect('data/database.db')
     c = conn.cursor()
 
     users = c.execute(
@@ -13,10 +11,10 @@ def reportBots(TARGET_USER, twitter_api, probabilityCut):
             TARGET_USER), (probabilityCut,)).fetchall()
     print("Collected " + len(users).__str__() + " possible bots")
     for user in users:
-        reportBot(TARGET_USER, twitter_api, user, conn)
+        reportBot(TARGET_USER, twitter_api, user)
 
 
-def reportBot(TARGET_USER, twitter_api, user, conn):
+def reportBot(TARGET_USER, twitter_api, user):
     c = conn.cursor()
     try:
         twitter_api.report_spam(user_id=user[0])

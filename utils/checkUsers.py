@@ -4,11 +4,13 @@ import botometer
 import tweepy
 from dateutil.tz import tzlocal
 
+from utils import config
 from Report.reportBots import reportBot
 
 
-def checkUser(TARGET_USER, bom_api, user_id, user_name, conn):
-    c = conn.cursor()
+# TODO add user creation date
+def checkUser(TARGET_USER, bom_api, user_id, user_name):
+    c = config.conn.cursor()
     try:
         print("Checking " + user_name)
         # check if it already exists
@@ -33,7 +35,7 @@ def checkUser(TARGET_USER, bom_api, user_id, user_name, conn):
                 datetime.fromtimestamp(limit["reset"], tzlocal()).strftime('%Y-%m-%d %H:%M:%S'))
             possibleBot = [user_id, user_name,
                            result["cap"]["english"], result["cap"]["universal"]]
-            reportBot(TARGET_USER, bom_api.twitter_api, possibleBot, conn)
+            reportBot(TARGET_USER, bom_api.twitter_api, possibleBot)
     except botometer.NoTimelineError:
         print("No timeline")
         # some accounts have no timeline, so botometer cannot score them - still suspicious

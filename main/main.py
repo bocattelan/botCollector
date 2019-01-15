@@ -1,7 +1,5 @@
 import os
 import sqlite3
-import subprocess
-import sys
 import time
 from datetime import datetime
 
@@ -10,10 +8,12 @@ from dateutil.tz import tzlocal
 from twitter import TwitterError
 import twitter
 
-from checkIfExists import checkIfExists
+from utils.checkIfExists import checkIfExists
 from Report.reportEmptyUsers import reportEmptyUsers
-from checkUsers import checkUser
-from plots.generatePlots import generate_all_plots, generate_plot
+from utils.checkUsers import checkUser
+from plots.generatePlots import generate_plot
+from utils.config import conn
+from utils.config import MAIN_DIRECTORY
 
 if __name__ == '__main__':
     if not os.path.exists("data/"):
@@ -28,8 +28,6 @@ if __name__ == '__main__':
             TARGET_USER = "CarlosBolsonaro"
             #path = os.path.dirname(sys.modules['__main__'].__file__)
 
-
-            conn = sqlite3.connect('data/database.db')
             c = conn.cursor()
             try:
                 c.execute(
@@ -41,7 +39,7 @@ if __name__ == '__main__':
                 print("Table Exception: " + error.__str__())
 
             # create twitter api object, using the tokens from a file called tokens.conf inside the data folder
-            tokenFile = open("data/tokens.conf", "r")
+            tokenFile = open(MAIN_DIRECTORY + "/data/tokens.conf", "r")
             CONSUMER_KEY = tokenFile.readline().__str__().rstrip('\n')
             CONSUMER_SECRET = tokenFile.readline().__str__().rstrip('\n')
             ACCESS_TOKEN_KEY = tokenFile.readline().__str__().rstrip('\n')
@@ -70,7 +68,7 @@ if __name__ == '__main__':
                                           **twitter_app_auth)
                 bom.twitter_api.wait_on_rate_limit_notify = True
 
-                conn = sqlite3.connect('data/database.db')
+                conn = sqlite3.connect(MAIN_DIRECTORY + '/data/database.db')
                 c = conn.cursor()
                 # create plots and update git server
                 if iteration == 5:
@@ -105,7 +103,7 @@ if __name__ == '__main__':
                     exit(0)
                 counter = 1
                 for follower in followers:
-                    checkUser(TARGET_USER, bom, follower.id, follower.screen_name, conn)
+                    checkUser(TARGET_USER, bom, follower.id, follower.screen_name,)
                     counter = counter+1
                     if (counter % 20) == 0:
                         print("Checked " + counter.__str__() + " users")

@@ -1,7 +1,7 @@
-import sqlite3
-
 from rpy2 import robjects
 from rpy2.robjects.packages import importr
+
+from utils import config
 
 
 def generate_plot(TARGET_USER):
@@ -31,7 +31,8 @@ library(RSQLite)
 library(lattice)
 
 sqlite <- dbDriver("SQLite")
-conn <- dbConnect(sqlite, "/Users/bocattelan/Workspace/botCollector/data/database.db", create = FALSE)
+path = paste("''' + config.MAIN_DIRECTORY + '''", "/data/database.db",sep="")
+conn <- dbConnect(sqlite, path, create = FALSE)
 
 df = dbGetQuery(conn, paste("SELECT * from {} WHERE capUniversal >= 0 AND lastCheck != 0"))
 
@@ -48,11 +49,11 @@ percentageReportedAndRemoved = (sum(df$reported == 1 & df$lastCheck == 0, na.rm 
 
 '''.format(TARGET_USER, TARGET_USER, TARGET_USER, TARGET_USER))
     rprint = robjects.globalenv.get("print")
-    grdevices.png(file="/Users/bocattelan/Workspace/botCollector/plots/png/plot_" + TARGET_USER + ".png")
+    grdevices.png(file=config.MAIN_DIRECTORY + "/plots/png/plot_" + TARGET_USER + ".png")
     rprint(x=robjects.r['histPlot'])
     grdevices.dev_off()
 
-    grdevices.pdf(file="/Users/bocattelan/Workspace/botCollector/plots/pdf/plot_" + TARGET_USER + ".pdf")
+    grdevices.pdf(file=config.MAIN_DIRECTORY + "/plots/pdf/plot_" + TARGET_USER + ".pdf")
     rprint(x=robjects.r['histPlot'])
     grdevices.dev_off()
 
@@ -61,31 +62,36 @@ percentageReportedAndRemoved = (sum(df$reported == 1 & df$lastCheck == 0, na.rm 
     print("Porcentagem de contas sem timeline: " + robjects.r["percentageNoTimeline"][0].__str__())
     print("Porcentagem de contas removidas: " + robjects.r["percentageRemoved"][0].__str__())
     print("Porcentagem de contas reportadas: " + robjects.r["percentageReported"][0].__str__())
-    print("Porcentagem de contas reportadas que foram removidas: " + robjects.r["percentageReportedAndRemoved"][0].__str__())
+    print("Porcentagem de contas reportadas que foram removidas: " + robjects.r["percentageReportedAndRemoved"][
+        0].__str__())
     print("")
 
     file_object = open("/Users/bocattelan/Workspace/botCollector/data/facebook_post.txt", "a")
     file_object.write("---------------------------------------------------------\n")
-    file_object.write("Estatísticas para " + TARGET_USER + " com pop. total " + robjects.r["populationAll"][0].__str__() + '\n')
-    file_object.write("Porcentagem de contas ativas com prob. acima de 75%: " + robjects.r["percentage75bot"][0].__str__() + '\n')
+    file_object.write(
+        "Estatísticas para " + TARGET_USER + " com pop. total " + robjects.r["populationAll"][0].__str__() + '\n')
+    file_object.write(
+        "Porcentagem de contas ativas com prob. acima de 75%: " + robjects.r["percentage75bot"][0].__str__() + '\n')
     file_object.write("Mesma pop. do gráfico: " + robjects.r["populationPlot"][0].__str__() + '\n')
     file_object.write('\n')
     file_object.write("Porcentagem de contas sem timeline: " + robjects.r["percentageNoTimeline"][0].__str__() + '\n')
     file_object.write("Porcentagem de contas removidas: " + robjects.r["percentageRemoved"][0].__str__() + '\n')
     file_object.write("Porcentagem de contas reportadas: " + robjects.r["percentageReported"][0].__str__() + '\n')
-    file_object.write("Porcentagem de contas reportadas que foram removidas: " + robjects.r["percentageReportedAndRemoved"][0].__str__() + '\n')
+    file_object.write(
+        "Porcentagem de contas reportadas que foram removidas: " + robjects.r["percentageReportedAndRemoved"][
+            0].__str__() + '\n')
     file_object.write("Pop. total: " + robjects.r["populationAll"][0].__str__() + '\n')
     file_object.write('\n')
     file_object.close()
 
-def generate_all_plots(conn):
-    file_object = open("../data/facebook_post.txt", "w")
-    c = conn.cursor()
+
+def generate_all_plots():
+    open(config.MAIN_DIRECTORY + "/data/facebook_post.txt", "w")
+    c = config.conn.cursor()
     targets = c.execute("SELECT name FROM sqlite_master WHERE type='table';").fetchall()
     for target in targets:
         generate_plot(target[0])
 
 
 if __name__ == '__main__':
-    conn = sqlite3.connect('../data/database.db')
-    generate_all_plots(conn)
+    generate_all_plots()
