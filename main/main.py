@@ -21,6 +21,7 @@ if __name__ == '__main__':
         os.makedirs(MAIN_DIRECTORY + "/data/")
     TARGET_USERs = ["jairbolsonaro", "xuxameneghel", "CarlosBolsonaro", "leandroruschel", "cnn"]
     userPool = cycle(TARGET_USERs)
+    cursors = {key: -1 for (key) in TARGET_USERs}
     for TARGET_USER in userPool:
         try:
             c = conn.cursor()
@@ -62,7 +63,7 @@ if __name__ == '__main__':
                 'access_token_secret': ACCESS_TOKEN_SECRET
             }
 
-            next_cursor = -1
+            next_cursor = cursors[TARGET_USER]
             while True:
                 print("Starting Twitter API")
                 api = twitter.Api(consumer_key=CONSUMER_KEY,
@@ -92,10 +93,10 @@ if __name__ == '__main__':
                 conn.commit()
 
                 try:
-                    next_cursor, previous_cursor, followers = api.GetFollowersPaged(screen_name=TARGET_USER,
-                                                                                    cursor=next_cursor,
-                                                                                    include_user_entities=False,
-                                                                                    skip_status=True)
+                    cursors[TARGET_USER], previous_cursor, followers = api.GetFollowersPaged(screen_name=TARGET_USER,
+                                                                                             cursor=next_cursor,
+                                                                                             include_user_entities=False,
+                                                                                             skip_status=True)
                     print("Got followers")
                 except TwitterError as error:
                     print("Could not get followers: " + error.__str__())
