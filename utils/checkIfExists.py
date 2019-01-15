@@ -11,7 +11,7 @@ def checkIfExists(TARGET_USER, twitter_api):
     # usersAll = c.execute(
     #    'SELECT userId FROM {} WHERE (lastCheck!=0 or lastCheck IS NULL)'.format(
     #        TARGET_USER)).fetchall()
-    users = getter.execute('SELECT userId FROM {} WHERE (lastCheck!=0)'.format(TARGET_USER)).fetchmany(100)
+    users = getter.execute('SELECT userId FROM {} WHERE (lastCheck!="0")'.format(TARGET_USER)).fetchmany(100)
     while len(users) != 0:
         try:
             print("Collected " + len(users).__str__() + " users from table " + TARGET_USER.__str__())

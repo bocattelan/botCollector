@@ -34,7 +34,7 @@ sqlite <- dbDriver("SQLite")
 path = paste("''' + config.MAIN_DIRECTORY + '''", "/data/database.db",sep="")
 conn <- dbConnect(sqlite, path, create = FALSE)
 
-df = dbGetQuery(conn, paste("SELECT * from {} WHERE capUniversal >= 0 AND lastCheck != 0"))
+df = dbGetQuery(conn, "SELECT * from {} WHERE capUniversal >= 0 AND lastCheck != '0'")
 
 histPlot = histogram(df$capUniversal * 100, type = "percent", main = paste("Twitter: {}, pop: ", nrow(df)), xlab = "Prob. of being a bot | Prob. de ser um robô", ylab = "Relative number of accounts | Número relativo de contas", breaks=seq(from=0,to=100,by=5))
 
@@ -43,9 +43,9 @@ populationPlot = nrow(df)
 df = dbGetQuery(conn, paste("SELECT * from {}"))
 percentageNoTimeline = (sum(df$capUniversal == -1)/nrow(df))*100
 populationAll = nrow(df)
-percentageRemoved = (sum(df$lastCheck == 0, na.rm = TRUE)/nrow(df))*100
+percentageRemoved = (sum(df$lastCheck == "0", na.rm = TRUE)/nrow(df))*100
 percentageReported = (sum(df$reported == 1, na.rm = TRUE)/nrow(df))*100
-percentageReportedAndRemoved = (sum(df$reported == 1 & df$lastCheck == 0, na.rm = TRUE)/nrow(df))*100
+percentageReportedAndRemoved = (sum(df$reported == 1 & df$lastCheck == "0", na.rm = TRUE)/nrow(df))*100
 
 '''.format(TARGET_USER, TARGET_USER, TARGET_USER, TARGET_USER))
     rprint = robjects.globalenv.get("print")
