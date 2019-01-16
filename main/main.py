@@ -12,7 +12,7 @@ from update.twitter import update_twitter
 from utils.checkIfExists import checkIfExists
 from Report.reportEmptyUsers import reportEmptyUsers
 from utils.checkUsers import checkUser
-from plots.generatePlots import generate_plot
+from plots.generatePlots import generate_plot, generate_all_plots
 from utils.config import conn
 from utils.config import MAIN_DIRECTORY
 from itertools import cycle
@@ -89,7 +89,6 @@ if __name__ == '__main__':
             checkIfExists(TARGET_USER, bom.twitter_api)
             # TODO use a separate process with gitpython
             # subprocess.call(["bash", "update.sh"])
-            generate_plot(TARGET_USER)
             limit = api.CheckRateLimit("https://api.twitter.com/1.1/followers/list.json")
             print("Next rate reset (Followers): " + datetime.fromtimestamp(limit[2], tzlocal()).strftime(
                 '%Y-%m-%d %H:%M:%S'))
@@ -112,7 +111,6 @@ if __name__ == '__main__':
             counter = 1
             for follower in followers:
                 try:
-
                     checkUser(TARGET_USER, bom, follower)
                 except Exception as error:
                     print("Failed to check " + follower.screen_name)
@@ -122,5 +120,7 @@ if __name__ == '__main__':
                     print("Checked " + counter.__str__() + " users")
             conn.commit()
             reportEmptyUsers(TARGET_USER, bom.twitter_api, 1)
+            if TARGET_USER == TARGET_USERs[-1]:
+                generate_all_plots()
         except Exception as error:
             print("Uncaught exception: " + error.__str__())
