@@ -79,16 +79,10 @@ if __name__ == '__main__':
                                       **twitter_app_auth)
             bom.twitter_api.wait_on_rate_limit_notify = True
 
-            #update_twitter(bom.twitter_api)
-
-            conn = sqlite3.connect(MAIN_DIRECTORY + '/data/database.db')
-            c = conn.cursor()
-
             # create plots and update git server
             # Check saved accounts for deleted ones
             checkIfExists(TARGET_USER, bom.twitter_api)
             # TODO use a separate process with gitpython
-            # subprocess.call(["bash", "update.sh"])
             limit = api.CheckRateLimit("https://api.twitter.com/1.1/followers/list.json")
             print("Next rate reset (Followers): " + datetime.fromtimestamp(limit[2], tzlocal()).strftime(
                 '%Y-%m-%d %H:%M:%S'))
@@ -106,7 +100,7 @@ if __name__ == '__main__':
             if len(followers) == 0:
                 print("No more followers!")
                 api.ClearCredentials()
-                c.close()
+                conn.close()
                 exit(0)
             counter = 1
             for follower in followers:
@@ -119,7 +113,7 @@ if __name__ == '__main__':
                 if (counter % 20) == 0:
                     print("Checked " + counter.__str__() + " users")
             conn.commit()
-            reportEmptyUsers(TARGET_USER, bom.twitter_api, 1)
+            c.close()
             if TARGET_USER == TARGET_USERs[-1]:
                 generate_all_plots()
         except Exception as error:

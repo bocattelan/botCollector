@@ -86,11 +86,12 @@ percentageReportedAndRemoved = (sum(df$reported == 1 & df$lastCheck == "0", na.r
 
 
 def generate_all_plots():
-    open(config.MAIN_DIRECTORY + "/data/facebook_post.txt", "w")
+    file = open(config.MAIN_DIRECTORY + "/data/facebook_post.txt", "w")
     c = config.conn.cursor()
     targets = c.execute("SELECT name FROM sqlite_master WHERE type='table';").fetchall()
     for target in targets:
         generate_plot(target[0])
+    c.close()
 
 
 if __name__ == '__main__':
