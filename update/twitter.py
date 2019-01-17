@@ -1,4 +1,3 @@
-def update_twitter(twitter_api):
-    twitter_payload = "Hallo!"
-    response = twitter_api.update_status(twitter_payload)
-    print("Update status: " + response)
+def update_twitter(twitter_api, message):
+    response = twitter_api.update_status(message)
+    print("Update status: " + response.__str__())

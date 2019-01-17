@@ -38,7 +38,7 @@ df = dbGetQuery(conn, "SELECT * from {} WHERE capUniversal >= 0 AND lastCheck !=
 
 histPlot = histogram(df$capUniversal * 100, type = "percent", main = paste("Twitter: {}, pop: ", nrow(df)), xlab = "Prob. of being a bot | Prob. de ser um robô", ylab = "Relative number of accounts | Número relativo de contas", breaks=seq(from=0,to=100,by=5))
 
-percentage75bot = (sum(df$capUniversal > 0.75)/nrow(df))*100
+percentage90bot = (sum(df$capUniversal >= 0.9)/nrow(df))*100
 populationPlot = nrow(df)
 df = dbGetQuery(conn, paste("SELECT * from {}"))
 percentageNoTimeline = (sum(df$capUniversal == -1)/nrow(df))*100
@@ -58,7 +58,7 @@ percentageReportedAndRemoved = (sum(df$reported == 1 & df$lastCheck == "0", na.r
     grdevices.dev_off()
 
     print("Estatísticas para " + TARGET_USER + " com pop. total " + robjects.r["populationAll"][0].__str__())
-    print("Porcentagem de contas ativas com prob. acima de 75%: " + robjects.r["percentage75bot"][0].__str__())
+    print("Porcentagem de contas ativas com prob. acima de 90%: " + robjects.r["percentage90bot"][0].__str__())
     print("Porcentagem de contas sem timeline: " + robjects.r["percentageNoTimeline"][0].__str__())
     print("Porcentagem de contas removidas: " + robjects.r["percentageRemoved"][0].__str__())
     print("Porcentagem de contas reportadas: " + robjects.r["percentageReported"][0].__str__())
@@ -71,7 +71,7 @@ percentageReportedAndRemoved = (sum(df$reported == 1 & df$lastCheck == "0", na.r
     file_object.write(
         "Estatísticas para " + TARGET_USER + " com pop. total " + robjects.r["populationAll"][0].__str__() + '\n')
     file_object.write(
-        "Porcentagem de contas ativas com prob. acima de 75%: " + robjects.r["percentage75bot"][0].__str__() + '\n')
+        "Porcentagem de contas ativas com prob. acima de 90%: " + robjects.r["percentage90bot"][0].__str__() + '\n')
     file_object.write("Mesma pop. do gráfico: " + robjects.r["populationPlot"][0].__str__() + '\n')
     file_object.write('\n')
     file_object.write("Porcentagem de contas sem timeline: " + robjects.r["percentageNoTimeline"][0].__str__() + '\n')
@@ -89,10 +89,16 @@ def generate_all_plots():
     file = open(config.MAIN_DIRECTORY + "/data/facebook_post.txt", "w")
     c = config.conn.cursor()
     targets = c.execute("SELECT name FROM sqlite_master WHERE type='table';").fetchall()
+    message = ""
     for target in targets:
         generate_plot(target[0])
+        message = message + "Usuário Alvo: " + target[0] + "\n"
+        message = message + "Usuários com probabilidade acima de 90%: " + "{:.3f}".format(robjects.r["percentage90bot"][0]) + "\n"
+        message = message + "População ativa total: " + robjects.r["populationPlot"][0].__str__() + "\n"
     c.close()
+    return message
 
 
 if __name__ == '__main__':
-    generate_all_plots()
+    message = generate_all_plots()
+    print(message)

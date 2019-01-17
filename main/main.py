@@ -115,6 +115,7 @@ if __name__ == '__main__':
             conn.commit()
             c.close()
             if TARGET_USER == TARGET_USERs[-1]:
-                generate_all_plots()
+                message = generate_all_plots()
+                update_twitter(bom.twitter_api, message)
         except Exception as error:
             print("Uncaught exception: " + error.__str__())
