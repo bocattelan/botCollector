@@ -89,14 +89,18 @@ def generate_all_plots():
     file = open(config.MAIN_DIRECTORY + "/data/facebook_post.txt", "w")
     c = config.conn.cursor()
     targets = c.execute("SELECT name FROM sqlite_master WHERE type='table';").fetchall()
-    message = ""
+    tweet_text = [dict() for x in targets]
+    message_index = 0
     for target in targets:
         generate_plot(target[0])
-        message = message + "Usuário Alvo: " + target[0] + "\n"
-        message = message + "Usuários com probabilidade acima de 90%: " + "{:.3f}".format(robjects.r["percentage90bot"][0]) + "\n"
-        message = message + "População ativa total: " + robjects.r["populationPlot"][0].__str__() + "\n"
+        tweet_text[message_index]["status"] = ""
+        tweet_text[message_index]["status"] = tweet_text[message_index]["status"] + "Usuário Alvo: " + target[0] + "\n"
+        tweet_text[message_index]["status"] = tweet_text[message_index]["status"] + "Usuários com prob. acima de 90%: " + "{:.3f}".format(robjects.r["percentage90bot"][0]) + "\n"
+        tweet_text[message_index]["status"] = tweet_text[message_index]["status"] + "População ativa total: " + robjects.r["populationPlot"][0].__str__() + "\n"
+        tweet_text[message_index]["media"] = config.MAIN_DIRECTORY + "/plots/png/plot_" + target[0] + ".png"
+        message_index = message_index + 1
     c.close()
-    return message
+    return tweet_text
 
 
 if __name__ == '__main__':
