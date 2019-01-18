@@ -35,8 +35,16 @@ path = paste("''' + config.MAIN_DIRECTORY + '''", "/data/database.db",sep="")
 conn <- dbConnect(sqlite, path, create = FALSE)
 
 df = dbGetQuery(conn, "SELECT * from {} WHERE capUniversal >= 0 AND lastCheck != '0'")
-
+#print(df$createdAt)
+#print(?strptime)
+#"Fri Jul 13 21:18:49 +0000 2018"
+print(head(df))
+df$createdAt <- as.Date(df$createdAt, "%a %b %d %X %z %Y")
+df$createdAt <- format(df$createdAt, "%Y")
+print(head(df))
+print(as.factor(df$createdAt))
 histPlot = histogram(df$capUniversal * 100, type = "percent", main = paste("Twitter: {}, pop: ", nrow(df)), xlab = "Prob. of being a bot | Prob. de ser um robô", ylab = "Relative number of accounts | Número relativo de contas", breaks=seq(from=0,to=100,by=5))
+histCreatedAt = histogram(as.factor(df$createdAt), type = "percent", main = paste("Twitter: {}, pop: ", nrow(df)), xlab = "Date of creation | Data de criação", ylab = "Relative number of accounts | Número relativo de contas")
 
 percentage90bot = (sum(df$capUniversal >= 0.9)/nrow(df))*100
 populationPlot = nrow(df)
@@ -55,6 +63,14 @@ percentageReportedAndRemoved = (sum(df$reported == 1 & df$lastCheck == "0", na.r
 
     grdevices.pdf(file=config.MAIN_DIRECTORY + "/plots/pdf/plot_" + TARGET_USER + ".pdf")
     rprint(x=robjects.r['histPlot'])
+    grdevices.dev_off()
+
+    grdevices.png(file=config.MAIN_DIRECTORY + "/plots/png/plot_" + TARGET_USER + "_createdAt.png")
+    rprint(x=robjects.r['histCreatedAt'])
+    grdevices.dev_off()
+
+    grdevices.pdf(file=config.MAIN_DIRECTORY + "/plots/pdf/plot_" + TARGET_USER + "_createdAt.pdf")
+    rprint(x=robjects.r['histCreatedAt'])
     grdevices.dev_off()
 
     print("Estatísticas para " + TARGET_USER + " com pop. total " + robjects.r["populationAll"][0].__str__())
