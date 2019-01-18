@@ -95,7 +95,7 @@ def generate_all_plots():
         generate_plot(target[0])
         tweet_text[message_index]["status"] = ""
         tweet_text[message_index]["status"] = tweet_text[message_index]["status"] + "Usuário Alvo: " + target[0] + "\n"
-        tweet_text[message_index]["status"] = tweet_text[message_index]["status"] + "Usuários com prob. acima de 90%: " + "{:.3f}".format(robjects.r["percentage90bot"][0]) + "\n"
+        tweet_text[message_index]["status"] = tweet_text[message_index]["status"] + "Usuários com prob. acima de 90%: " + "{:.3f}".format(robjects.r["percentage90bot"][0]) + "%\n"
         tweet_text[message_index]["status"] = tweet_text[message_index]["status"] + "População ativa total: " + robjects.r["populationPlot"][0].__str__() + "\n"
         tweet_text[message_index]["media"] = config.MAIN_DIRECTORY + "/plots/png/plot_" + target[0] + ".png"
         message_index = message_index + 1
