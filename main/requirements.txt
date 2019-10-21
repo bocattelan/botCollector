@@ -40,6 +40,6 @@ toga-cocoa==0.3.0.dev11
 toga-core==0.3.0.dev11
 travertino==0.1.2
 tweepy==3.7.0
-urllib3==1.23
+urllib3==1.24.2
 voc==0.1.6
 whichcraft==0.5.2
