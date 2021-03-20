@@ -15,7 +15,7 @@ future==0.17.1
 gitdb2==2.0.5
 GitPython==2.1.11
 idna==2.8
-Jinja2==2.10
+Jinja2==2.11.3
 jinja2-time==0.2.0
 jmespath==0.9.3
 macholib==1.11
