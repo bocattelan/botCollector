@@ -23,7 +23,7 @@ MarkupSafe==1.1.0
 oauthlib==2.1.0
 pefile==2018.8.8
 poyo==0.4.2
-PyInstaller==3.4
+PyInstaller==3.6
 PySocks==1.6.8
 python-dateutil==2.7.5
 python-twitter==3.5
