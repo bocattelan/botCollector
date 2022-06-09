@@ -9,7 +9,7 @@ certifi==2018.11.29
 chardet==3.0.4
 Click==7.0
 colosseum==0.1.6
-cookiecutter==1.6.0
+cookiecutter==2.1.1
 docutils==0.14
 future==0.17.1
 gitdb2==2.0.5
